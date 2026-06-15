@@ -31,4 +31,3 @@ typedef struct PyramisBlock
 
 extern void PyramisBlockSetDefaultVariables(PyramisBlock* block);
 extern bool PyramisBlockQualifiesForPyramid(PyramisBlock* block);
-extern void PyramisBlockCopy(PyramisBlock* to, PyramisBlock* from);

@@ -21,13 +21,3 @@ bool PyramisBlockQualifiesForPyramid(PyramisBlock* block)
 	}
 	return result;
 }
-
-void PyramisBlockCopy(PyramisBlock* to, PyramisBlock* from)
-{
-	to->triangleA = from->triangleA;
-	to->triangleB = from->triangleB;
-	to->empty = from->empty;
-	to->miniPyramid = from->miniPyramid;
-	to->rotated = from->rotated;
-	to->garbage = from->garbage;
-}

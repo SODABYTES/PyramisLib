@@ -520,7 +520,7 @@ void PyramisGamePredictDropPyramids(PyramisGame* game)
 	{
 		for (int y = 0; y < PYRAMIS_GRID_SIZE_Y; y++)
 		{
-			PyramisBlockCopy(&copy[x][y], &game->playfield[x][y]);
+			copy[x][y] = game->playfield[x][y];
 		}
 	}
 
@@ -668,7 +668,7 @@ void PyramisGameRunStateMachineTick(PyramisGame* game, float delta)
 			{
 				for (int x = 0; x < PYRAMIS_GRID_SIZE_X; x++)
 				{
-					PyramisBlockCopy(&oldPlayfield[x][y], &game->playfield[x][y]);
+					oldPlayfield[x][y] = game->playfield[x][y];
 				}
 			}
 
@@ -860,7 +860,7 @@ PyramisPyramidResults PyramisGameCheckPyramids(PyramisGame* game, PyramisBlock g
 	{
 		for (int x = 0; x < PYRAMIS_GRID_SIZE_X; x++)
 		{
-			PyramisBlockCopy(&result.playfield[x][y], &gridToCheck[x][y]);
+			result.playfield[x][y] = gridToCheck[x][y];
 			result.playfield[x][y].triangleA.pyramidValue = 0;
 			result.playfield[x][y].triangleB.pyramidValue = 0;
 			result.playfield[x][y].miniPyramid = false;
