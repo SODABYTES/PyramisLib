@@ -11,6 +11,10 @@ void PyramisTriangleSetDefaultVariables(PyramisTriangle* triangle)
 
 unsigned int PyramisTriangleGetScoreFromPyramidValue(PyramisTriangle triangle)
 {
+    return triangle.pyramidValue * 300;
+
+    // OLDER EXPONENTIAL LOGIC THAT I'M KEEPING COMMENTED OUT JUST IN CASE?
+    /*
     unsigned int result = 1;
     for (unsigned int i = 0; i < triangle.pyramidValue - 1; i++)
     {
@@ -18,4 +22,5 @@ unsigned int PyramisTriangleGetScoreFromPyramidValue(PyramisTriangle triangle)
     }
     result = result * 300;
     return result;
+    */
 }
