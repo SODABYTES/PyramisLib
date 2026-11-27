@@ -49,6 +49,7 @@ PyramisGame* PyramisGameCreate()
 	result->state = PYRAMIS_GAME_STATE_BLANK;
 	result->isNewState = true;
 	result->stateDuration = 0;
+	result->dangerState = 0;
 
 	PyramisRNGInit(&result->rng, 0, 3);
 
@@ -410,6 +411,7 @@ void PyramisGameDropBlockTick(PyramisGame* game, float delta)
 
 void PyramisGameTryToStartDrop(PyramisGame* game)
 {
+	PyramisGameUpdateDangerState(game);
 	if (game->score >= game->rules.maxScore)
 	{
 		PyramisGameSetState(game, PYRAMIS_GAME_STATE_MAX_OUT_WIN);
@@ -476,6 +478,8 @@ void PyramisGameCrushFinish(PyramisGame* game)
 	PyramisGameResetCrushScore(game);
 	game->isCrushQueued = false;
 	game->level += 1;
+	game->dangerState = 0;
+	PyramisGameUpdateDangerState(game);
 
 	PyramisGameTryToStartDrop(game);
 }
@@ -850,8 +854,6 @@ bool PyramisIsCoordinateValid(int x, int y)
 
 PyramisPyramidResults PyramisGameCheckPyramids(PyramisGame* game, PyramisBlock gridToCheck[PYRAMIS_GRID_SIZE_X][PYRAMIS_GRID_SIZE_Y])
 {
-	// Here we go. I'm writing the pyramid detection code again. Hopefully for the last time
-
 	PyramisPyramidResults result;
 
 	// Copy the grid that was supplied to us.
@@ -957,7 +959,6 @@ PyramisPyramidResults PyramisGameCheckPyramids(PyramisGame* game, PyramisBlock g
 
 					if (rotationCheck && colorCheck && qualifyCheck)
 					{
-						//lala
 						result.playfield[x][y].miniPyramid = true;
 						result.playfield[x][capCoordinate].miniPyramid = true;
 
@@ -1149,6 +1150,9 @@ void PyramisGameSetVariablesForNewGame(PyramisGame* game)
 	{
 		game->nextQueue[i] = PyramisRNGGenerateBlock(&game->rng);
 	}
+
+	// State
+	game->dangerState = 0;
 }
 
 void PyramisGameUpdate(PyramisGame* game, float delta)
@@ -1205,6 +1209,87 @@ void PyramisGameNormalModeUpdateRules(PyramisGame* game)
 		newEntryDelay = newDelayTime;
 	}
 	game->rules.lockEntryDelay = newEntryDelay;
+}
+
+uint8_t PyramisGameGetDangerGrade(PyramisGame* game)
+{
+	uint8_t result = 0;
+
+	if (!game)
+	{
+		return result;
+	}
+
+	// Check if the top of the board is filled up and there's nothing to crush
+	if (game->pyramids <= 0)
+	{
+		uint16_t fillScore = 0;
+		for (int y = 0; y < PYRAMIS_DANGER_FILL_CHECK_COLUMNS; y++)
+		{
+			for (int x = 0; x < PYRAMIS_GRID_SIZE_X; x++)
+			{
+				if (!game->playfield[x][y + (PYRAMIS_GRID_SIZE_Y - PYRAMIS_GRID_SIZE_Y_VISUAL)].empty)
+				{
+					fillScore += 1;
+				}
+			}
+			if (fillScore >= PYRAMIS_DANGER_FILL_CHECK_LEVEL_2_THRESHOLD)
+			{
+				result = 2;
+			}
+			else if (fillScore >= PYRAMIS_DANGER_FILL_CHECK_LEVEL_1_THRESHOLD)
+			{
+				result = 1;
+			}
+		}
+	}
+
+	// Check how much the drop column is filled up
+	int8_t columnDangerLevel = 0;
+	int blocksInDropColumn = 0;
+	for (int y = 0; y < PYRAMIS_GRID_SIZE_Y; y++)
+	{
+		PyramisBlock blockToCheck = game->playfield[PYRAMIS_DROP_DEFAULT_X][y];
+
+		bool blockIsFilled = !blockToCheck.empty;
+		bool blockIsNotMiniPyramid = (!blockToCheck.miniPyramid) || game->pyramids <= 0; // Doesn't matter if it's a mini pyramid if a crush can't happen.
+		bool blockIsNotPartOfPyramid = (blockToCheck.triangleA.pyramidValue <= 0) || (blockToCheck.triangleB.pyramidValue <= 0);
+
+		if (blockIsFilled && blockIsNotMiniPyramid && blockIsNotPartOfPyramid)
+		{
+			blocksInDropColumn += 1;
+		}
+	}
+
+	if (blocksInDropColumn >= PYRAMIS_DANGER_COLUMN_CHECK_LEVEL_2_THRESHOLD)
+	{
+		columnDangerLevel = 2;
+	}
+	else if (blocksInDropColumn >= PYRAMIS_DANGER_COLUMN_CHECK_LEVEL_1_THRESHOLD)
+	{
+		columnDangerLevel = 1;
+	}
+
+	if (columnDangerLevel > result)
+	{
+		result = columnDangerLevel;
+	}
+	
+	return result;
+}
+
+void PyramisGameUpdateDangerState(PyramisGame* game)
+{
+	if (!game)
+	{
+		return;
+	}
+
+	uint8_t newDangerGrade = PyramisGameGetDangerGrade(game);
+	if (newDangerGrade > game->dangerState)
+	{
+		game->dangerState = newDangerGrade;
+	}
 }
 
 void PyramisGameFree(PyramisGame* game)

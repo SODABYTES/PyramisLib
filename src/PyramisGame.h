@@ -22,6 +22,12 @@ extern "C"
 #define PYRAMIS_DROP_DEFAULT_X 3
 #define PYRAMIS_DROP_DEFAULT_Y 10.25f // From the bottom of the grid.
 
+#define PYRAMIS_DANGER_FILL_CHECK_COLUMNS 5
+#define PYRAMIS_DANGER_FILL_CHECK_LEVEL_1_THRESHOLD 15
+#define PYRAMIS_DANGER_FILL_CHECK_LEVEL_2_THRESHOLD 20
+#define PYRAMIS_DANGER_COLUMN_CHECK_LEVEL_1_THRESHOLD 6
+#define PYRAMIS_DANGER_COLUMN_CHECK_LEVEL_2_THRESHOLD 8
+
 // The size of the next queue. (This isn't necessarily how many blocks the player can see.)
 #define PYRAMIS_NEXT_QUEUE_SIZE 8
 
@@ -95,6 +101,7 @@ typedef struct PyramisGame
     uint_fast8_t state;
     bool isNewState;
     float stateDuration; // How long the current state has lasted, in seconds.
+    uint8_t dangerState; // Current danger state. This is NOT the same as the danger grade-- the danger state only ever decreases after a crush.
 
     /// RNG
 
@@ -143,6 +150,11 @@ extern void PyramisGameSetVariablesForNewGame(PyramisGame* game);
 extern void PyramisGameUpdate(PyramisGame* game, float delta);
 
 extern void PyramisGameNormalModeUpdateRules(PyramisGame* game);
+
+// Calculates the game's current danger grade. This is NOT the same as the danger state-- the danger grade can change dynamically depending on the current circumstances.
+extern uint8_t PyramisGameGetDangerGrade(PyramisGame* game);
+
+extern void PyramisGameUpdateDangerState(PyramisGame* game);
 
 extern void PyramisGameFree(PyramisGame* game);
 
